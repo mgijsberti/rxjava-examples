@@ -2,31 +2,47 @@ package examples.rx;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action1;
+import rx.functions.Func1;
 
 import java.util.concurrent.TimeUnit;
 
 /**
  * Application with examples of RxJava API
+ * See
+ *
+ * http://blog.danlew.net/2014/09/15/grokking-rxjava-part-1/
+ * http://blog.danlew.net/2014/09/22/grokking-rxjava-part-2/
  *
  */
 public class RxJavaGrokkingExamples
 {
     public static void main( String[] args ){
+        //part 1
+        //create observables
+        simpleFromInput();
+        withTimer();
+        withCreate();
+        withSubscriber();
+        withJustAction();
+        withJustLambda();
 
-        exampleSimpleFromInput();
-        exampleWithTimer();
-        exampleWithCreate();
-        exampleWithSubscriber();
-        exampleWithJust();
-        exampleWithMap();
+        //transformations
+        withMapFunction();
+        withMapLambda();
+        withMapTransform();
+
 
     }
+
+
+
 
     /**
      * Example with Observable.from(input)
      */
-    private static void exampleSimpleFromInput(){
-        String method = "exampleSimpleFromInput";
+    private static void simpleFromInput(){
+        String method = new Object(){}.getClass().getEnclosingMethod().getName();
         String[] input = {"Hello", "world"};
         Observable<String> observable1 = Observable.from(input);
 
@@ -46,8 +62,8 @@ public class RxJavaGrokkingExamples
     /**
      * Example with Observable.timer
      */
-    private static void exampleWithTimer(){
-        String method = "exampleWithTimer";
+    private static void withTimer(){
+        String method = new Object(){}.getClass().getEnclosingMethod().getName();
         Observable<Long> observable2 = Observable.timer(1, TimeUnit.SECONDS);
         observable2.subscribe(
                 message -> {
@@ -60,8 +76,8 @@ public class RxJavaGrokkingExamples
      * Example with Observable.create
      *
      */
-    private static void exampleWithCreate(){
-        String method = "exampleWithCreate";
+    private static void withCreate(){
+        String method = new Object(){}.getClass().getEnclosingMethod().getName();
         Observable<String> observable3 = Observable.create(
                 subscriber -> {
                     subscriber.onNext("Hello");
@@ -81,8 +97,8 @@ public class RxJavaGrokkingExamples
     /**
      *  Example with observable.subscribe(new Subscriber<String>(){...})
      */
-    private static void exampleWithSubscriber() {
-        String aMethod = "exampleWithSubscriber";
+    private static void withSubscriber() {
+        String aMethod = new Object(){}.getClass().getEnclosingMethod().getName();
         Observable<String> observable = Observable.create(
                 subscriber -> {
                     subscriber.onNext("x");
@@ -123,24 +139,66 @@ public class RxJavaGrokkingExamples
     }
 
     /**
-     * Example with Observable.just which is a shorter notation then for example exampleSimpleFromInput()
+     * Example how to use an action and subscribe an observable with the action.
      */
-    private static void exampleWithJust(){
-        String method = "exampleWithJust";
-        Observable.just("Using just ...")
+    private static void withJustAction(){
+        String method = new Object(){}.getClass().getEnclosingMethod().getName();
+        Action1<String> onNextAction = new Action1<String>() {
+            @Override
+            public void call(String s) {
+                log(method,s,"action with 1 argument");
+            }
+        };
+        Observable.just("Using just with action").subscribe(onNextAction);
+    }
+
+    /**
+     * Example with Observable.just which is a shorter lambda notation then for example examplewithAction()
+     */
+    private static void withJustLambda(){
+        String method = new Object(){}.getClass().getEnclosingMethod().getName();
+        Observable.just("Using just with lambda ...")
                 .subscribe(s -> log(method,s,""));
     }
 
     /**
-     *  Example how to use map to chain the output of Observables
+     *  Example how to use map to chain the output of Observables with additional func1
      */
-    private static void exampleWithMap(){
-        String method = "exampleWithMap";
+    private static void withMapFunction() {
+        String method = new Object(){}.getClass().getEnclosingMethod().getName();
+        Observable.just("Using just with map and function")
+                .map(new Func1<String, String>() {
+                    @Override
+                    public String call(String s) {
+                        return s + "--Function";
+                    }
+                })
+                .subscribe(s -> log(method,s,"with function"));
+    }
+
+    /**
+     *  Example how to use map to chain the output of Observables with lambda notation. This is a shorter version
+     *  of withMapFunction()
+     */
+    private static void withMapLambda(){
+        String method = new Object(){}.getClass().getEnclosingMethod().getName();
         Observable.just("Hello, world!")
                 .map(s -> s + "-map1")
                 .map(s -> s + "-map2")
                 .subscribe(s -> log(method,s, ""));
     }
+
+    /**
+     * Example of map can transform streams into different types (from String to Integer to String).
+     */
+    private static void withMapTransform() {
+        String method = new Object(){}.getClass().getEnclosingMethod().getName();
+        Observable.just("Transform this!")
+                .map(s -> s.hashCode())
+                .map(i -> Integer.toString(i))
+                .subscribe(s -> log(method,s, "transformed!"));
+    }
+
 
     static void log(String method, String label, String message){
         System.out.println(method + " - " + label + ": "+ message);
