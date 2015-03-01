@@ -226,8 +226,10 @@ public class RxJavaGrokkingExamples
                 .flatMap(url -> addWikiPrefix(url))
                 .map(wurl -> startsWithWiki(wurl)) //map is used to convert Observable<String> to String
                 .filter(furl -> furl != null)
+                .doOnNext(furl -> save(furl))
                 .subscribe(furl -> log(method, furl, ""));
     }
+
 
     private static Observable<List<String>> search(String text){
         try {
@@ -252,6 +254,10 @@ public class RxJavaGrokkingExamples
             return url;
         }
         return null;
+    }
+
+    private static void save(String furl) {
+        log("save",furl,"saved");
     }
 
     static void log(String method, String label, String message){
