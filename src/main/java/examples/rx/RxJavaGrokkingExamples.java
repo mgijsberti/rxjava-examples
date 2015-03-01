@@ -35,10 +35,8 @@ public class RxJavaGrokkingExamples
         withMapTransform();
 
         //part 2
-        Observable<List<String>> search =  GoogleSearch.search("Java");
         withQueryFlatMap();
         withQueryFlatMapFilterWikiPedia();
-
     }
 
 
