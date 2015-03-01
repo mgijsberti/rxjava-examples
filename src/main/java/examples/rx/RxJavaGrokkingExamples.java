@@ -1,10 +1,12 @@
 package examples.rx;
 
+import examples.rx.search.GoogleSearch;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -17,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class RxJavaGrokkingExamples
 {
-    public static void main( String[] args ){
+    public static void main( String[] args ) throws Exception {
         //part 1
         //create observables
         simpleFromInput();
@@ -32,9 +34,12 @@ public class RxJavaGrokkingExamples
         withMapLambda();
         withMapTransform();
 
+        //part 2
+        Observable<List<String>> search =  GoogleSearch.search("Java");
+        withQueryFlatMap();
+        withQueryFlatMapFilterWikiPedia();
 
     }
-
 
 
 
@@ -199,6 +204,55 @@ public class RxJavaGrokkingExamples
                 .subscribe(s -> log(method,s, "transformed!"));
     }
 
+    /**
+     * Using flatMap to iterate over a List of urls returned by Google search on Java
+     *
+     * @throws Exception
+     */
+    private static void withQueryFlatMap() throws Exception {
+        String method = new Object() {}.getClass().getEnclosingMethod().getName();
+        search("Java")
+                .flatMap(urls -> Observable.from(urls))
+                .subscribe(url -> log(method,url,""));
+    }
+
+    /**
+     * Using flatmap and filter to select urls from Wikipedia.
+     */
+    private static void withQueryFlatMapFilterWikiPedia() {
+        String method = new Object() {}.getClass().getEnclosingMethod().getName();
+        search("Hello world!")
+                .flatMap(urls -> Observable.from(urls))
+                .flatMap(url -> addWikiPrefix(url))
+                .map(wurl -> startsWithWiki(wurl)) //map is used to convert Observable<String> to String
+                .filter(furl -> furl != null)
+                .subscribe(furl -> log(method, furl, ""));
+    }
+
+    private static Observable<List<String>> search(String text){
+        try {
+            return GoogleSearch.search(text);
+        }catch(Exception e){
+            logError("search",e.getMessage(),"");
+        }
+        return null;
+    }
+
+    static Observable<String> addWikiPrefix(String url){
+        String wiki = "";
+        if(url.contains("wikipedia.org")) {
+            wiki = "Wiki:";
+        }
+        String[] r = {wiki + url};
+        return Observable.from(r);
+    }
+
+    static String startsWithWiki(String url){
+        if(url.startsWith("Wiki:")){
+            return url;
+        }
+        return null;
+    }
 
     static void log(String method, String label, String message){
         System.out.println(method + " - " + label + ": "+ message);
